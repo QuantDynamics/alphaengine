@@ -1,8 +1,9 @@
 import os
+import datetime
 import baostock as bs
 import pandas as pd
 from utils.logger import StockLogger
-from collect_scripts.dump_stock import DumpStockBase, StockDumpType
+from collect_scripts.dump_stock import DumpStockBase, IndexType, StockDumpType
 
 
 class BaoStockUtils(DumpStockBase):
@@ -113,7 +114,9 @@ class BaoStockUtils(DumpStockBase):
             rs = bs.query_history_k_data_plus(
                 code=stock_id, fields=fields, start_date=start_date, end_date=end_date)
             data = rs.get_data()
-            data.to_csv(os.path.join(save_data_dir, f"{stock_id}.csv"), index=False)
+            save_file = os.path.join(save_data_dir, f"{stock_id}.csv")
+            BaoStockUtils.logger.info(f"Save stock data to {save_file}")
+            data.to_csv(save_file, index=False)
         bs.logout()
 
     @staticmethod
@@ -122,3 +125,44 @@ class BaoStockUtils(DumpStockBase):
         for feature in feature_names:
             fields += feature + ","
         return fields[:-1]
+
+    @staticmethod
+    def dump_index_ingredients(start_date: str = "2019-07-01",
+                               end_date: str = "2021-07-01",
+                               save_dir: str = None,
+                               index_type: IndexType = IndexType.SZ50):
+        if save_dir is None:
+            # save_file = os.path.join(BaoStockUtils.data_save_dir, "sh50_ingredients.csv")
+            save_dir = BaoStockUtils.data_save_dir
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+        start_day = BaoStockUtils.format_datetime(start_date)
+        end_day = BaoStockUtils.format_datetime(end_date)
+        delta_day = datetime.timedelta(1)
+        lg = bs.login()
+        while start_day <= end_day:
+            date_str = start_day.strftime("%Y-%m-%d")
+            print(date_str)
+            sz50_records = []
+            rs = bs.query_sz50_stocks(date=date_str)
+            while (rs.error_code == "0" and rs.next()):
+                sz50_records.append(rs.get_row_data())
+            if sz50_records == []:
+                start_day += delta_day
+                continue
+            save_file = os.path.join(save_dir, f"{index_type.name}_{date_str}.csv")
+            result = pd.DataFrame(sz50_records, columns=rs.fields)
+            result.to_csv(save_file, index=False)
+            start_day += delta_day
+
+
+
+    @staticmethod
+    def format_datetime(date: str):
+        """
+        格式化时间"2019-01-01"成datetime.date
+        date: str, such as 2019-01-01
+        """ 
+        year, month, day = [int(x) for x in date.split("-")] 
+        return datetime.date(year, month, day)
+

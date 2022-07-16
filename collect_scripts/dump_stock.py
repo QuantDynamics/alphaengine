@@ -12,6 +12,14 @@ class StockDumpType(IntEnum):
     # 下载开始日期和结束日期股票的交集
     INTERSECTION = 4
 
+@unique 
+class IndexType(IntEnum):
+    # 上证50
+    SZ50 = 1 
+    # 沪深300
+    HS300 = 2
+    # 中证500
+    ZZ500 = 3
 
 class DumpStockBase(object):
     """
@@ -45,5 +53,20 @@ class DumpStockBase(object):
         feature_names: 所有特征的集合，例如["date", "code", "open"]
         stock_ids_dir: 股票代码数据存储路径
         save_data_dir: 存储下载数据的目录，默认是None，使用BaoStock.data_save_dir
+        """
+        raise NotImplementedError
+
+    @staticmethod
+    def dump_index_ingredients(start_date: str,
+                               end_date: str,
+                               save_dir: str,
+                               index_type: IndexType):
+        """下载从start_date到end_date之间的所有股指的成分股名称
+
+        Params:
+        start_date: str, such as 2019-02-01
+        end_date: str, such as 2019-02-01
+        save_dir: str, save data directory 
+        index_type: IndexType
         """
         raise NotImplementedError

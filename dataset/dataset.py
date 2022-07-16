@@ -18,3 +18,17 @@ class DataSetBase(object):
     @abstractmethod
     def prepare_dataset(self, source_dir: str, dest_file: str, dump: bool):
         raise NotImplementedError
+    
+    @abstractmethod
+    def load_dataset(self, ds_file: str):
+        raise NotImplementedError
+
+    @abstractmethod
+    def split_dataset(self, ratios: list):
+        """
+        将数据集拆分成train_ds, val_ds, test_ds, 数据比例按照ratios。
+        """
+        assert len(ratios) == 3
+        self.train_ds = None
+        self.val_ds = None
+        self.test_ds = None
